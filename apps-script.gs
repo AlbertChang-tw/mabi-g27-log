@@ -28,7 +28,7 @@ function doPost(e) {
     if (!log) return jsonResponse({ ok: false, error: "sheet 掉落紀錄 not found" });
 
     const shareMap = buildShareMap(members);
-    const timestamp = Utilities.formatDate(new Date(), TIMEZONE, "yyyy-MM-dd HH:mm:ss");
+    const timestamp = Utilities.formatDate(new Date(), TIMEZONE, "yyyy-MM-dd");
     const shareFlag = shareMap[data.member] || "";
 
     const rows = data.drops
