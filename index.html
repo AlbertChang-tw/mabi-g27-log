@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>G27 副本掉落紀錄</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #13171d;
+    --surface-hover: #1a1f27;
+    --border: #232932;
+    --border-strong: #2e3540;
+    --text: #e8eaed;
+    --text-sec: #9aa3b2;
+    --text-muted: #6b7280;
+    --accent: #4ade80;
+    --accent-hover: #22c55e;
+    --accent-bg: rgba(74, 222, 128, 0.08);
+    --accent-border: rgba(74, 222, 128, 0.35);
+    --accent-text: #86efac;
+    --danger: #ef4444;
+    --ring: 0 0 0 3px rgba(74, 222, 128, 0.18);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 140px;
+  }
+  header { margin-bottom: 28px; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .subtitle { color: var(--text-sec); font-size: 14px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sec);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+  .card-hint {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: -4px;
+    margin-bottom: 12px;
+  }
+  select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%239aa3b2' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+  select:hover { border-color: #3a414c; }
+  select:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+
+  .mat-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 10px;
+    border-radius: var(--radius-md);
+    transition: background 0.12s;
+  }
+  .mat-row:hover { background: var(--surface-hover); }
+  .mat-row.has-value { background: var(--accent-bg); }
+  .mat-row + .mat-row { margin-top: 2px; }
+
+  .mat-name {
+    flex: 1;
+    font-size: 14.5px;
+    color: var(--text);
+    font-weight: 450;
+  }
+  .mat-row.has-value .mat-name { color: var(--accent-text); font-weight: 500; }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .qty-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text-sec);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: all 0.12s;
+  }
+  .qty-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: #3a414c;
+  }
+  .qty-btn:active { transform: scale(0.96); }
+  .qty-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .mat-row.has-value .qty-btn {
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+  .mat-row.has-value .qty-btn:hover {
+    background: rgba(74, 222, 128, 0.12);
+  }
+
+  .qty-input {
+    width: 52px;
+    height: 32px;
+    text-align: center;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 0;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.12s;
+  }
+  .qty-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--ring);
+  }
+  .qty-input::-webkit-inner-spin-button,
+  .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .mat-row.has-value .qty-input {
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+
+  .summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(11, 13, 16, 0.82);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+  .summary-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .summary-info {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-sec);
+  }
+  .summary-count {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-count.active { color: var(--accent); }
+
+  .submit-btn {
+    background: var(--surface-hover);
+    color: var(--text-sec);
+    border: 1px solid var(--border-strong);
+    padding: 11px 22px;
+    border-radius: var(--radius-md);
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+    letter-spacing: -0.005em;
+  }
+  .submit-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .submit-btn:active:not(:disabled) { transform: translateY(0); }
+  .submit-btn.ready {
+    background: var(--accent);
+    color: #0b0d10;
+    border-color: var(--accent);
+  }
+  .submit-btn.ready:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success {
+    background: var(--accent);
+    color: #0b0d10;
+    border-color: var(--accent);
+  }
+  .toast.error {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
+
+  .debug {
+    margin-top: 12px;
+    padding: 16px;
+    background: #000;
+    color: var(--text-sec);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 320px;
+    overflow: auto;
+  }
+  .debug-title {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <span class="eyebrow">Mabinogi · Raid Log</span>
+    <h1>G27 副本掉落紀錄</h1>
+    <div class="subtitle" id="today-label"></div>
+  </header>
+
+  <div class="card">
+    <label class="card-label" for="member">成員</label>
+    <select id="member">
+      <option value="">請選擇成員</option>
+      <option value="破鳥">破鳥</option>
+      <option value="大佐">大佐</option>
+      <option value="魔頭">魔頭</option>
+      <option value="殘血">殘血</option>
+      <option value="小羊">小羊</option>
+      <option value="夏目">夏目</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <label class="card-label">掉落材料</label>
+    <div class="card-hint">只填有掉的材料，其餘留空</div>
+    <div id="materials"></div>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="summary-inner">
+    <div class="summary-info">
+      已填 <span class="summary-count" id="filled-count">0</span> 項 · 共 <span class="summary-count" id="total-qty">0</span> 個
+    </div>
+    <button class="submit-btn" id="submit-btn" disabled>送出本場</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const MATERIALS = [
+    "布里萊赫核心", "布里萊赫精髓",
+    "橘光記憶碎片", "綠光記憶碎片", "黃光記憶碎片",
+    "蘊含布里萊赫氣息的徽章",
+    "鈍刃碎片", "柔軟的金屬碎片", "褪色的刺繡線",
+    "空的魔力石", "霰石", "透輝石", "鵝卵石",
+    "奧妙的金屬碎片", "奧妙的魔力石", "奧妙的皮革碎片",
+    "高純度魔力結晶",
+    "綠意盎然的刀刃碎片", "綠意盎然的金屬碎片",
+    "綠意盎然的礦石碎片", "綠意盎然的木柴",
+    "堅硬的稀原礦石碎片",
+    "純白的皮革碎片", "純白的羽毛",
+    "透明的鍊金術結晶",
+    "綠意盎然的法師的寶石",
+    "堅硬的狼牙", "魔力石"
+  ];
+
+  // TODO: 部署 Apps Script 後把網址貼這裡
+  const ENDPOINT_URL = "";
+
+  const submitAudio = new Audio("submit.mp3");
+  submitAudio.preload = "auto";
+  submitAudio.volume = 0.85;
+  function playSubmitSfx() {
+    submitAudio.currentTime = 0;
+    submitAudio.play().catch(() => {});
+  }
+
+  const $materials = document.getElementById("materials");
+  const $submit = document.getElementById("submit-btn");
+  const $member = document.getElementById("member");
+  const $filled = document.getElementById("filled-count");
+  const $total = document.getElementById("total-qty");
+  const $today = document.getElementById("today-label");
+  const $toast = document.getElementById("toast");
+
+  const WEEKDAYS = ["週日","週一","週二","週三","週四","週五","週六"];
+  const now = new Date();
+  $today.textContent = `${now.getFullYear()} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日 · ${WEEKDAYS[now.getDay()]}`;
+
+  MATERIALS.forEach((name, idx) => {
+    const row = document.createElement("div");
+    row.className = "mat-row";
+    row.innerHTML = `
+      <div class="mat-name">${name}</div>
+      <div class="qty-control">
+        <button class="qty-btn" data-action="dec" data-idx="${idx}" aria-label="減少">−</button>
+        <input type="number" class="qty-input" data-idx="${idx}" min="0" inputmode="numeric" placeholder="0" aria-label="${name} 數量" />
+        <button class="qty-btn" data-action="inc" data-idx="${idx}" aria-label="增加">+</button>
+      </div>
+    `;
+    $materials.appendChild(row);
+  });
+
+  $materials.addEventListener("click", (e) => {
+    const btn = e.target.closest(".qty-btn");
+    if (!btn) return;
+    const idx = btn.dataset.idx;
+    const input = $materials.querySelector(`.qty-input[data-idx="${idx}"]`);
+    let val = parseInt(input.value) || 0;
+    if (btn.dataset.action === "inc") val++;
+    else if (btn.dataset.action === "dec") val = Math.max(0, val - 1);
+    input.value = val > 0 ? val : "";
+    updateState();
+  });
+
+  $materials.addEventListener("input", updateState);
+  $member.addEventListener("change", updateState);
+
+  function updateState() {
+    let filled = 0, total = 0;
+    $materials.querySelectorAll(".qty-input").forEach((inp) => {
+      const v = parseInt(inp.value) || 0;
+      const row = inp.closest(".mat-row");
+      if (v > 0) {
+        filled++;
+        total += v;
+        row.classList.add("has-value");
+      } else {
+        row.classList.remove("has-value");
+      }
+    });
+    $filled.textContent = filled;
+    $total.textContent = total;
+    $filled.classList.toggle("active", filled > 0);
+    $total.classList.toggle("active", total > 0);
+    const ready = filled > 0 && $member.value;
+    $submit.disabled = !ready;
+    $submit.classList.toggle("ready", ready);
+  }
+
+  function showToast(msg, type) {
+    $toast.textContent = msg;
+    $toast.className = "toast show" + (type ? " " + type : "");
+    setTimeout(() => $toast.classList.remove("show"), 2500);
+  }
+
+  function buildPayload() {
+    const member = $member.value;
+    const drops = [];
+    $materials.querySelectorAll(".qty-input").forEach((inp, i) => {
+      const v = parseInt(inp.value) || 0;
+      if (v > 0) drops.push({ material: MATERIALS[i], qty: v });
+    });
+    // 注意：時間戳由 Apps Script 伺服器端蓋，前端不送時間
+    return { member, drops };
+  }
+
+  $submit.addEventListener("click", async () => {
+    const payload = buildPayload();
+    playSubmitSfx();
+
+    if (!ENDPOINT_URL) {
+      document.querySelector(".debug")?.remove();
+      const dbg = document.createElement("div");
+      dbg.className = "debug card";
+      dbg.innerHTML = `<div class="debug-title">預覽模式 · 尚未接上 Apps Script（時間戳將由伺服器蓋）</div>` +
+                      JSON.stringify(payload, null, 2);
+      document.querySelector(".container").appendChild(dbg);
+      showToast("已生成 payload", "success");
+      dbg.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+
+    $submit.disabled = true;
+    $submit.textContent = "送出中…";
+    try {
+      await fetch(ENDPOINT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload),
+      });
+      showToast(`已記錄 ${payload.drops.length} 種材料`, "success");
+      $materials.querySelectorAll(".qty-input").forEach(i => i.value = "");
+      updateState();
+    } catch (err) {
+      showToast("送出失敗：" + err.message, "error");
+    } finally {
+      $submit.textContent = "送出本場";
+      updateState();
+    }
+  });
+</script>
+</body>
+</html>
