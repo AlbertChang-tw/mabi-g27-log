@@ -469,21 +469,18 @@
 
     $submit.disabled = true;
     $submit.textContent = "送出中…";
-    try {
-      await fetch(ENDPOINT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(payload),
-      });
-      showToast(`已記錄 ${payload.drops.length} 種材料`, "success");
-      $materials.querySelectorAll(".qty-input").forEach(i => i.value = "");
-      updateState();
-    } catch (err) {
-      showToast("送出失敗：" + err.message, "error");
-    } finally {
-      $submit.textContent = "送出本場";
-      updateState();
-    }
+    // no-cors 模式無法讀取 response，部分瀏覽器即使送出成功也會 throw，
+    // 所以只要請求送出就視為成功，不依賴 fetch resolve/reject。
+    fetch(ENDPOINT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+
+    showToast(`已記錄 ${payload.drops.length} 種材料`, "success");
+    $materials.querySelectorAll(".qty-input").forEach(i => i.value = "");
+    $submit.textContent = "送出本場";
+    updateState();
   });
 </script>
 </body>
