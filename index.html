@@ -241,6 +241,12 @@
   }
   .submit-btn.ready:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
   .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  @keyframes submit-flash {
+    0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.75); }
+    60%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 0   rgba(74, 222, 128, 0); }
+  }
+  .submit-btn.flash { animation: submit-flash 0.5s ease-out; }
 
   .toast {
     position: fixed;
@@ -363,14 +369,6 @@
 
   const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycby45IE1IuijvD4sNEiyJCCT5OvNKeKLZbAM7kM7genx4g8B9kuXNv0v97If0A-6OGuU/exec";
 
-  const submitAudio = new Audio("submit.mp3");
-  submitAudio.preload = "auto";
-  submitAudio.volume = 0.85;
-  function playSubmitSfx() {
-    submitAudio.currentTime = 0;
-    submitAudio.play().catch(() => {});
-  }
-
   const $materials = document.getElementById("materials");
   const $submit = document.getElementById("submit-btn");
   const $member = document.getElementById("member");
@@ -453,7 +451,9 @@
 
   $submit.addEventListener("click", async () => {
     const payload = buildPayload();
-    playSubmitSfx();
+    $submit.classList.remove("flash");
+    void $submit.offsetWidth; // reflow 讓動畫可重複觸發
+    $submit.classList.add("flash");
 
     if (!ENDPOINT_URL) {
       document.querySelector(".debug")?.remove();
